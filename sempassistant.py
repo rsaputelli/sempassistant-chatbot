@@ -25,7 +25,8 @@ def normalize(text):
 def match_faq(user_input):
     norm_input = normalize(user_input)
     for key, response in FAQS.items():
-        if all(word in norm_input for word in key.split()):
+        keywords = key.split()
+        if any(word in norm_input for word in keywords):
             return response, "FAQ"
     return None, None
 
