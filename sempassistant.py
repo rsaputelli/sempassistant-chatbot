@@ -1,3 +1,4 @@
+
 import streamlit as st
 import openai
 
@@ -50,3 +51,4 @@ if user_input:
             st.success(gpt_answer)
         except Exception as e:
             st.error("Sorry, something went wrong while contacting OpenAI. Please try again later.")
+
