@@ -1,4 +1,6 @@
+# Rewrite match_faq to scan all FAQ entries and match based on any synonym associated with any FAQ key
 
+improved_faq_logic = """
 import streamlit as st
 import openai
 import csv
@@ -18,14 +20,13 @@ FAQS = {
     "contact sempa": "You can reach SEMPA at sempa@sempa.org or call 877-297-7954."
 }
 
-SYNONYMS = {
-    "join": ["join", "sign up", "enroll", "become a member"],
-    "renew": ["renew", "renewal", "extend membership"],
-    "categories": ["categories", "types", "levels", "dues", "cost"],
-    "register": ["register", "sign up", "attend", "enroll"],
-    "discount": ["discount", "save", "benefits"],
-    "recordings": ["recordings", "sessions", "videos", "past sessions"],
-    "contact": ["contact", "email", "call", "support", "help"]
+SYNONYM_MAP = {
+    "join or renew": ["join", "sign up", "enroll", "become a member", "renew", "renewal", "extend membership"],
+    "membership categories": ["categories", "types", "levels", "dues", "cost", "pricing"],
+    "register for events": ["register", "sign up", "attend", "enroll", "conference"],
+    "member discounts": ["discount", "save", "benefits", "perks"],
+    "access session recordings": ["recordings", "sessions", "videos", "past sessions", "on demand"],
+    "contact sempa": ["contact", "email", "call", "support", "help"]
 }
 
 def normalize(text):
@@ -33,11 +34,9 @@ def normalize(text):
 
 def match_faq(user_input):
     norm_input = normalize(user_input)
-    for key_phrase, response in FAQS.items():
-        main_key = key_phrase.split()[0]
-        synonym_list = SYNONYMS.get(main_key, [])
-        if any(word in norm_input for word in synonym_list):
-            return response, "FAQ"
+    for faq_key, synonyms in SYNONYM_MAP.items():
+        if any(s in norm_input for s in synonyms):
+            return FAQS[faq_key], "FAQ"
     return None, None
 
 def detect_agent_request(user_input):
@@ -69,7 +68,7 @@ if user_input:
     else:
         answer, source = match_faq(user_input)
         if answer:
-            log_source(user_input, "FAQ")
+            log_source(user_input, source)
             st.success(answer)
         else:
             openai.api_key = st.secrets["OPENAI_API_KEY"]
@@ -86,11 +85,11 @@ if user_input:
                 log_token_usage(user_input, total_tokens)
                 log_source(user_input, "GPT")
                 st.success(gpt_answer)
-            except Exception as e:
+            except Exception:
                 log_source(user_input, "Fallback")
                 st.info("I'm not sure — please contact us at [sempa@sempa.org](mailto:sempa@sempa.org)")
 
-# Admin-only sidebar tools
+# Admin tools
 st.sidebar.markdown("🔐 Admin Panel")
 if st.sidebar.checkbox("Show Admin Tools"):
     if Path("token_log.csv").exists():
@@ -99,4 +98,11 @@ if st.sidebar.checkbox("Show Admin Tools"):
     if Path("source_log.csv").exists():
         with open("source_log.csv", "rb") as f:
             st.download_button("📥 Download Source Log", f, file_name="source_log.csv")
+"""
+
+# Save to file
+final_faq_fix_path = Path("/mnt/data/sempassistant_faq_improved_matching.py")
+final_faq_fix_path.write_text(improved_faq_logic)
+
+final_faq_fix_path.name
 
