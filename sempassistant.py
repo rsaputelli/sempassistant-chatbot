@@ -1,6 +1,3 @@
-# Rewrite match_faq to scan all FAQ entries and match based on any synonym associated with any FAQ key
-
-improved_faq_logic = """
 import streamlit as st
 import openai
 import csv
@@ -11,6 +8,7 @@ st.set_page_config(page_title="SEMPAssistant", page_icon="🩺", layout="centere
 st.title("👋 Welcome to SEMPAssistant!")
 st.write("I'm here to help you with SEMPA membership and event questions. Ask me anything!")
 
+# FAQs
 FAQS = {
     "join or renew": "Visit the [Join or Renew page](https://sempa.site-ym.com/general/register_member_type.asp) to get started with SEMPA membership.",
     "membership categories": "SEMPA offers various membership categories. You can view them all at [https://sempa.org/categories-dues/](https://sempa.org/categories-dues/).",
@@ -20,6 +18,7 @@ FAQS = {
     "contact sempa": "You can reach SEMPA at sempa@sempa.org or call 877-297-7954."
 }
 
+# Synonym map to enhance FAQ detection
 SYNONYM_MAP = {
     "join or renew": ["join", "sign up", "enroll", "become a member", "renew", "renewal", "extend membership"],
     "membership categories": ["categories", "types", "levels", "dues", "cost", "pricing"],
@@ -89,7 +88,7 @@ if user_input:
                 log_source(user_input, "Fallback")
                 st.info("I'm not sure — please contact us at [sempa@sempa.org](mailto:sempa@sempa.org)")
 
-# Admin tools
+# Admin tools in sidebar
 st.sidebar.markdown("🔐 Admin Panel")
 if st.sidebar.checkbox("Show Admin Tools"):
     if Path("token_log.csv").exists():
@@ -98,11 +97,4 @@ if st.sidebar.checkbox("Show Admin Tools"):
     if Path("source_log.csv").exists():
         with open("source_log.csv", "rb") as f:
             st.download_button("📥 Download Source Log", f, file_name="source_log.csv")
-"""
-
-# Save to file
-final_faq_fix_path = Path("/mnt/data/sempassistant_faq_improved_matching.py")
-final_faq_fix_path.write_text(improved_faq_logic)
-
-final_faq_fix_path.name
 
