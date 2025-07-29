@@ -26,8 +26,8 @@ def match_faq(user_input):
     norm_input = normalize(user_input)
     for key, response in FAQS.items():
         if all(word in norm_input for word in key.split()):
-            return response
-    return None
+            return response, "FAQ"
+    return None, None
 
 def log_token_usage(question, total_tokens):
     cost_per_token = 0.002 / 1000
@@ -37,11 +37,18 @@ def log_token_usage(question, total_tokens):
         writer = csv.writer(f)
         writer.writerow([timestamp, question, total_tokens, est_cost])
 
+def log_source(question, source):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open("source_log.csv", mode="a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow([timestamp, question, source])
+
 user_input = st.text_input("Ask a question about SEMPA membership or events:")
 
 if user_input:
-    answer = match_faq(user_input)
+    answer, source = match_faq(user_input)
     if answer:
+        log_source(user_input, "FAQ")
         st.success(answer)
     else:
         openai.api_key = st.secrets["OPENAI_API_KEY"]
@@ -56,9 +63,11 @@ if user_input:
             gpt_answer = response['choices'][0]['message']['content']
             total_tokens = response['usage']['total_tokens']
             log_token_usage(user_input, total_tokens)
+            log_source(user_input, "GPT")
             st.success(gpt_answer)
         except Exception as e:
-            st.error("Sorry, something went wrong while contacting OpenAI.")
+            log_source(user_input, "Fallback")
+            st.info("I'm not sure — please contact us at [sempa@sempa.org](mailto:sempa@sempa.org)")
 
 # Admin-only sidebar tools
 st.sidebar.markdown("🔐 Admin Panel")
@@ -66,3 +75,6 @@ if st.sidebar.checkbox("Show Admin Tools"):
     if Path("token_log.csv").exists():
         with open("token_log.csv", "rb") as f:
             st.download_button("📥 Download Token Log", f, file_name="token_log.csv")
+    if Path("source_log.csv").exists():
+        with open("source_log.csv", "rb") as f:
+            st.download_button("📥 Download Source Log", f, file_name="source_log.csv")
