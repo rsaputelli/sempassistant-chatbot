@@ -2,54 +2,31 @@
 import streamlit as st
 import openai
 
-st.set_page_config(page_title="SEMPAssistant", page_icon="🩺", layout="centered")
-st.title("👋 Welcome to SEMPAssistant!")
-st.write("I'm here to help you with SEMPA membership and event questions. Ask me anything!")
+st.set_page_config(page_title="SEMPAssistant Deep Debug", page_icon="🧪", layout="centered")
+st.title("🔍 Deep Debug: SEMPAssistant")
+st.write("This version shows raw debug info for GPT fallback issues.")
 
-# FAQ list
-FAQS = {
-    "join sempa": "Visit the Join or Renew page at sempa.org and choose 'Join' to create your account.",
-    "renew membership": "Log in to your SEMPA Member Portal and follow the renewal instructions.",
-    "membership categories": "SEMPA offers categories like standard, senior fellow, and more — details at sempa.org/join-or-renew.",
-    "register for events": "Go to the Event Calendar or Education sections at sempa.org to register for events like SEMPA 360.",
-    "member discounts": "Yes! Members save up to 40% on events, CME, and partner resources.",
-    "access session recordings": "Log in to your SEMPA account and go to the 'My Education' section to find session recordings.",
-    "contact sempa": "You can reach SEMPA at sempa@sempa.org or call 877-297-7954."
-}
+# Attempt to show the key (partial only for security)
+api_key = st.secrets.get("OPENAI_API_KEY", None)
+if api_key:
+    st.success(f"✅ OPENAI_API_KEY loaded: {api_key[:8]}... (hidden)")
+else:
+    st.error("❌ OPENAI_API_KEY not found in Streamlit secrets.")
 
-# Normalize user input
-def normalize(text):
-    return text.lower().strip()
-
-# Check if question matches FAQ
-def match_faq(user_input):
-    norm_input = normalize(user_input)
-    for key, response in FAQS.items():
-        if all(word in norm_input for word in key.split()):
-            return response
-    return None
-
-# Chat input
-user_input = st.text_input("Ask a question about SEMPA membership or events:")
-
-if user_input:
-    answer = match_faq(user_input)
-
-    if answer:
-        st.success(answer)
-    else:
-        openai.api_key = st.secrets["OPENAI_API_KEY"]
-        try:
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "..."},
-                    {"role": "user", "content": user_input}
-                ]
-            )
-            gpt_answer = response['choices'][0]['message']['content']
-            st.success(gpt_answer)
-        except Exception as e:
-            st.error(f"⚠️ OpenAI Error: {e}")
-
+# Try a test GPT call
+try:
+    openai.api_key = api_key
+    test_prompt = "What is SEMPA?"
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant for SEMPA (Society of Emergency Medicine PAs)."},
+            {"role": "user", "content": test_prompt}
+        ]
+    )
+    st.success("✅ GPT call succeeded!")
+    st.write(response['choices'][0]['message']['content'])
+except Exception as e:
+    st.error("❌ GPT call failed.")
+    st.code(str(e), language='text')
 
