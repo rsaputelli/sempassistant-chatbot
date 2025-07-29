@@ -1,38 +1,52 @@
-
 import streamlit as st
 import openai
 
 st.set_page_config(page_title="SEMPAssistant", page_icon="🩺", layout="centered")
-
 st.title("👋 Welcome to SEMPAssistant!")
 st.write("I'm here to help you with SEMPA membership and event questions. Ask me anything!")
 
-# FAQ knowledge base (hardcoded for now)
+# FAQ list
 FAQS = {
-    "how do i join sempa": "Visit the Join or Renew page at sempa.org and choose 'Join' to create your account.",
-    "how do i renew my membership": "Log in to your SEMPA Member Portal and follow the renewal instructions.",
-    "what are the membership categories": "SEMPA offers categories like standard, senior fellow, and more — details at sempa.org/join-or-renew.",
-    "how can i register for sempa events": "Go to the Event Calendar or Education sections at sempa.org to register for events like SEMPA 360.",
-    "do members get discounts": "Yes! Members save up to 40% on events, CME, and partner resources.",
-    "how do i access session recordings": "Log in to your SEMPA account and go to the 'My Education' section to find session recordings.",
-    "how do i contact sempa": "You can reach SEMPA at sempa@sempa.org or call 877-297-7954."
+    "join sempa": "Visit the Join or Renew page at sempa.org and choose 'Join' to create your account.",
+    "renew membership": "Log in to your SEMPA Member Portal and follow the renewal instructions.",
+    "membership categories": "SEMPA offers categories like standard, senior fellow, and more — details at sempa.org/join-or-renew.",
+    "register for events": "Go to the Event Calendar or Education sections at sempa.org to register for events like SEMPA 360.",
+    "member discounts": "Yes! Members save up to 40% on events, CME, and partner resources.",
+    "access session recordings": "Log in to your SEMPA account and go to the 'My Education' section to find session recordings.",
+    "contact sempa": "You can reach SEMPA at sempa@sempa.org or call 877-297-7954."
 }
 
-# Normalize function
+# Normalize user input
 def normalize(text):
     return text.lower().strip()
 
-# Chat input
-user_question = st.text_input("Ask a question about SEMPA membership or events:")
+# Check if question matches FAQ
+def match_faq(user_input):
+    norm_input = normalize(user_input)
+    for key, response in FAQS.items():
+        if all(word in norm_input for word in key.split()):
+            return response
+    return None
 
-if user_question:
-    normalized = normalize(user_question)
-    answer = None
-    for q, a in FAQS.items():
-        if q in normalized:
-            answer = a
-            break
+# Chat input
+user_input = st.text_input("Ask a question about SEMPA membership or events:")
+
+if user_input:
+    answer = match_faq(user_input)
+
     if answer:
         st.success(answer)
     else:
-        st.info("I'm not sure — please contact us at [sempa@sempa.org](mailto:sempa@sempa.org)")
+        openai.api_key = st.secrets["OPENAI_API_KEY"]
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant for SEMPA (Society of Emergency Medicine PAs). Only answer questions about SEMPA membership, events, or support. If unsure, suggest the user contact sempa@sempa.org."},
+                    {"role": "user", "content": user_input}
+                ]
+            )
+            gpt_answer = response['choices'][0]['message']['content']
+            st.success(gpt_answer)
+        except Exception as e:
+            st.error("Sorry, something went wrong while contacting OpenAI. Please try again later.")
