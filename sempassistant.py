@@ -43,12 +43,13 @@ if user_input:
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "You are a helpful assistant for SEMPA (Society of Emergency Medicine PAs). Only answer questions about SEMPA membership, events, or support. If unsure, suggest the user contact sempa@sempa.org."},
+                    {"role": "system", "content": "..."},
                     {"role": "user", "content": user_input}
                 ]
             )
             gpt_answer = response['choices'][0]['message']['content']
             st.success(gpt_answer)
         except Exception as e:
-            st.error("Sorry, something went wrong while contacting OpenAI. Please try again later.")
+            st.error(f"⚠️ OpenAI Error: {e}")
+
 
