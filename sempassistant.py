@@ -10,8 +10,7 @@ st.title("👋 Welcome to SEMPAssistant!")
 st.write("I'm here to help you with SEMPA membership and event questions. Ask me anything!")
 
 FAQS = {
-    "join sempa": "Visit the [Join or Renew page](https://sempa.site-ym.com/general/register_member_type.asp) to get started with SEMPA membership.",
-    "renew membership": "To renew your membership, please log in to your SEMPA account at [this link](https://sempa.site-ym.com/general/register_member_type.asp).",
+    "join or renew": "Visit the [Join or Renew page](https://sempa.site-ym.com/general/register_member_type.asp) to get started with SEMPA membership.",
     "membership categories": "SEMPA offers various membership categories. You can view them all at [https://sempa.org/categories-dues/](https://sempa.org/categories-dues/).",
     "register for events": "Go to the Event Calendar or Education sections at sempa.org to register for events like SEMPA 360.",
     "member discounts": "Yes! Members save up to 40% on events, CME, and partner resources.",
@@ -19,14 +18,25 @@ FAQS = {
     "contact sempa": "You can reach SEMPA at sempa@sempa.org or call 877-297-7954."
 }
 
+SYNONYMS = {
+    "join": ["join", "sign up", "enroll", "become a member"],
+    "renew": ["renew", "renewal", "extend membership"],
+    "categories": ["categories", "types", "levels", "dues", "cost"],
+    "register": ["register", "sign up", "attend", "enroll"],
+    "discount": ["discount", "save", "benefits"],
+    "recordings": ["recordings", "sessions", "videos", "past sessions"],
+    "contact": ["contact", "email", "call", "support", "help"]
+}
+
 def normalize(text):
     return text.lower().strip()
 
 def match_faq(user_input):
     norm_input = normalize(user_input)
-    for key, response in FAQS.items():
-        keywords = key.split()
-        if any(word in norm_input for word in keywords):
+    for key_phrase, response in FAQS.items():
+        main_key = key_phrase.split()[0]
+        synonym_list = SYNONYMS.get(main_key, [])
+        if any(word in norm_input for word in synonym_list):
             return response, "FAQ"
     return None, None
 
