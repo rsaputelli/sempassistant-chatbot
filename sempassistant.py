@@ -21,11 +21,23 @@ ADMIN_USERS = ["ray@lutinemanagement.com"]
 user_email = getattr(st.experimental_user, "email", None)
 
 # --- LOAD VECTOR STORE ---
-import pickle
 from langchain_community.vectorstores import FAISS
+from langchain.embeddings.openai import OpenAIEmbeddings
 
 with open("sempa_faiss_index.pkl", "rb") as f:
-    vectorstore = pickle.load(f)
+    data = pickle.load(f)
+    index = data["index"]
+    documents = data["documents"]
+
+docstore = FAISS._build_docstore(documents)
+index_to_docstore_id = {i: str(i) for i in range(len(documents))}
+
+vectorstore = FAISS(
+    index=index,
+    docstore=docstore,
+    index_to_docstore_id=index_to_docstore_id,
+    embedding_function=OpenAIEmbeddings()
+)
 
 retriever = vectorstore.as_retriever()
 
