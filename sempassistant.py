@@ -21,8 +21,17 @@ ADMIN_USERS = ["ray@lutinemanagement.com"]
 user_email = getattr(st.experimental_user, "email", None)
 
 # --- LOAD VECTOR STORE ---
+import pickle
+from langchain_community.vectorstores import FAISS
+
 with open("sempa_faiss_index.pkl", "rb") as f:
-    vectorstore = pickle.load(f)
+    vector_data = pickle.load(f)
+
+vectorstore = FAISS(
+    index=vector_data["index"],
+    documents=vector_data["documents"],
+    embedding_function=None  # Optional: you can replace with get_embedding if needed
+)
 
 retriever = vectorstore.as_retriever()
 
