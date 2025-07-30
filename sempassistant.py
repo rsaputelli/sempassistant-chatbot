@@ -92,7 +92,7 @@ FAQS = {
     "member discounts": "Yes! Members save up to 40% on events, CME, and partner resources.",
     "access session recordings": "Log in to your SEMPA account and go to the 'My Education' section to find session recordings.",
     "contact sempa": "You can reach SEMPA at sempa@sempa.org or call 877-297-7954."
-    "sempa 360": "The next SEMPA 360 conference will be held in 2026 in San Antonio. More info: https://www.sempa.org/event/sempa-360-2026-san-antonio"
+    
 }
 
 SYNONYM_MAP = {
