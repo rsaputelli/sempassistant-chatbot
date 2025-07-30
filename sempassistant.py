@@ -27,11 +27,17 @@ from langchain_community.vectorstores import FAISS
 with open("sempa_faiss_index.pkl", "rb") as f:
     vector_data = pickle.load(f)
 
+from langchain_community.vectorstores.faiss import FAISS
+from langchain_core.documents import Document
+
+# Convert back into Document objects if needed
+documents = [Document(page_content=doc['page_content'], metadata=doc['metadata']) for doc in vector_data["documents"]]
+
 vectorstore = FAISS(
     index=vector_data["index"],
-    documents=vector_data["documents"],
-    embedding_function=None  # Optional: you can replace with get_embedding if needed
+    embedding_function=None
 )
+vectorstore.docstore._dict = {str(i): doc for i, doc in enumerate(documents)}
 
 retriever = vectorstore.as_retriever()
 
