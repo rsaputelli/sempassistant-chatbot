@@ -10,6 +10,8 @@ import numpy as np
 from langchain_community.vectorstores import FAISS
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import RetrievalQA
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.docstore import InMemoryDocstore
 
 # --- PAGE SETUP ---
 st.set_page_config(page_title="SEMPAssistant", page_icon="🩺", layout="centered")
@@ -24,12 +26,18 @@ user_email = getattr(st.experimental_user, "email", None)
 from langchain_community.vectorstores import FAISS
 from langchain.embeddings.openai import OpenAIEmbeddings
 
+# Load the raw index and documents dictionary (as saved by the crawler)
 with open("sempa_faiss_index.pkl", "rb") as f:
     data = pickle.load(f)
     index = data["index"]
     documents = data["documents"]
 
-docstore = FAISS._build_docstore(documents)
+# Properly reconstruct FAISS vectorstore object
+# Required since we're not using save_local/load_local
+
+# Build InMemoryDocstore
+docstore_dict = {str(i): doc for i, doc in enumerate(documents)}
+docstore = InMemoryDocstore(docstore_dict)
 index_to_docstore_id = {i: str(i) for i in range(len(documents))}
 
 vectorstore = FAISS(
@@ -40,6 +48,7 @@ vectorstore = FAISS(
 )
 
 retriever = vectorstore.as_retriever()
+
 
 # --- OPENAI CLIENT ---
 from openai import OpenAI
