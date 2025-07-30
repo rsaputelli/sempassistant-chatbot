@@ -18,14 +18,21 @@ ADMIN_USERS = ["ray@lutinemanagement.com"]
 user_email = getattr(st.experimental_user, "email", None)
 
 # --- LOAD VECTOR STORE ---
+from langchain.vectorstores.faiss import FAISS
+
 with open("sempa_faiss_index.pkl", "rb") as f:
     vector_data = pickle.load(f)
     faiss_index = vector_data["index"]
     documents = vector_data["documents"]
     embeddings = vector_data["embeddings"]
 
+vectorstore = FAISS(embedding_function=None, index=faiss_index, documents=documents)
+retriever = vectorstore.as_retriever()
+
+# --- OPENAI CLIENT ---
 from openai import OpenAI
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
 
 def get_embedding(text: str):
     response = client.embeddings.create(
