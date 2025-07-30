@@ -1,7 +1,7 @@
 streamlit
 openai
-faiss-cpu
-langchain
+langchain==0.3.27
 langchain-community
-langchain-openai
+faiss-cpu
 numpy
+
