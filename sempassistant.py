@@ -38,7 +38,7 @@ vectorstore = FAISS(
     index_to_docstore_id=index_to_docstore_id,
     embedding_function=embedding_function
 )
-retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+retriever = vectorstore.as_retriever(search_kwargs={"k": 6})
 
 # --- OPENAI CLIENT ---
 client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
