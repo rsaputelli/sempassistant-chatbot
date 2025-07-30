@@ -3,7 +3,6 @@ import openai
 import csv
 from datetime import datetime
 from pathlib import Path
-from typing import Tuple
 import pickle
 import numpy as np
 
@@ -14,7 +13,7 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.docstore import InMemoryDocstore
 
 # --- PAGE SETUP ---
-st.set_page_config(page_title="SEMPAssistant", page_icon="🩺", layout="centered")
+st.set_page_config(page_title="SEMPAssistant", page_icon="💕", layout="centered")
 st.title("👋 Welcome to SEMPAssistant!")
 st.write("I'm here to help you with SEMPA membership and event questions. Ask me anything!")
 
@@ -23,38 +22,28 @@ ADMIN_USERS = ["ray@lutinemanagement.com"]
 user_email = getattr(st.experimental_user, "email", None)
 
 # --- LOAD VECTOR STORE ---
-from langchain_community.vectorstores import FAISS
-from langchain.embeddings.openai import OpenAIEmbeddings
-
-# Load the raw index and documents dictionary (as saved by the crawler)
 with open("sempa_faiss_index.pkl", "rb") as f:
     data = pickle.load(f)
     index = data["index"]
     documents = data["documents"]
 
-# Properly reconstruct FAISS vectorstore object
-# Required since we're not using save_local/load_local
-
-# Build InMemoryDocstore
 docstore_dict = {str(i): doc for i, doc in enumerate(documents)}
 docstore = InMemoryDocstore(docstore_dict)
 index_to_docstore_id = {i: str(i) for i in range(len(documents))}
 
+embedding_function = OpenAIEmbeddings(model="text-embedding-3-small")
 vectorstore = FAISS(
     index=index,
     docstore=docstore,
     index_to_docstore_id=index_to_docstore_id,
-    embedding_function=OpenAIEmbeddings()
+    embedding_function=embedding_function
 )
-
-retriever = vectorstore.as_retriever()
-
+retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
 
 # --- OPENAI CLIENT ---
-from openai import OpenAI
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# --- EMBEDDING FUNCTION (used internally, optional) ---
+# --- EMBEDDING FUNCTION (optional standalone use) ---
 def get_embedding(text: str):
     response = client.embeddings.create(
         model="text-embedding-3-small",
@@ -123,7 +112,6 @@ if user_input:
         st.markdown("[Click here to email us directly](mailto:sempa@sempa.org)")
         log_source(user_input, "Email Referral")
     else:
-        # First try RAG
         try:
             response = rag_chain({"query": user_input})
             answer = response["result"]
@@ -132,11 +120,9 @@ if user_input:
             answer = None
             source = None
 
-        # Then fallback to FAQ
         if not answer:
             answer, source = match_faq(user_input)
 
-        # Then fallback to GPT
         if not answer:
             openai.api_key = st.secrets["OPENAI_API_KEY"]
             try:
@@ -164,13 +150,12 @@ if user_email in ADMIN_USERS:
         st.subheader("📊 Admin Dashboard")
         if Path("token_log.csv").exists():
             with open("token_log.csv", "rb") as f:
-                st.download_button("📥 Download Token Log", f, file_name="token_log.csv")
+                st.download_button("📅 Download Token Log", f, file_name="token_log.csv")
         if Path("source_log.csv").exists():
             with open("source_log.csv", "rb") as f:
-                st.download_button("📥 Download Source Log", f, file_name="source_log.csv")
+                st.download_button("📅 Download Source Log", f, file_name="source_log.csv")
 else:
     st.sidebar.caption("Admin access required to view tools.")
-
 
 
 
