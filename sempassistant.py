@@ -7,7 +7,7 @@ from typing import Tuple
 import pickle
 
 import numpy as np
-from langchain.vectorstores.faiss import FAISS
+from langchain_community.vectorstores import FAISS
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import RetrievalQA
 
