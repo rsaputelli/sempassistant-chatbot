@@ -25,15 +25,7 @@ import pickle
 from langchain_community.vectorstores import FAISS
 
 with open("sempa_faiss_index.pkl", "rb") as f:
-    vector_data = pickle.load(f)
-
-documents = vector_data["documents"]  # Already Document objects
-
-vectorstore = FAISS(
-    index=vector_data["index"],
-    embedding_function=None
-)
-vectorstore.docstore._dict = {str(i): doc for i, doc in enumerate(documents)}
+    vectorstore = pickle.load(f)
 
 retriever = vectorstore.as_retriever()
 
@@ -157,6 +149,7 @@ if user_email in ADMIN_USERS:
                 st.download_button("📥 Download Source Log", f, file_name="source_log.csv")
 else:
     st.sidebar.caption("Admin access required to view tools.")
+
 
 
 
