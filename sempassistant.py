@@ -27,11 +27,7 @@ from langchain_community.vectorstores import FAISS
 with open("sempa_faiss_index.pkl", "rb") as f:
     vector_data = pickle.load(f)
 
-from langchain_community.vectorstores.faiss import FAISS
-from langchain_core.documents import Document
-
-# Convert back into Document objects if needed
-documents = [Document(page_content=doc['page_content'], metadata=doc['metadata']) for doc in vector_data["documents"]]
+documents = vector_data["documents"]  # Already Document objects
 
 vectorstore = FAISS(
     index=vector_data["index"],
