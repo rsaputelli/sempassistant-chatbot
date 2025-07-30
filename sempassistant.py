@@ -24,13 +24,15 @@ with open("sempa_faiss_index.pkl", "rb") as f:
     documents = vector_data["documents"]
     embeddings = vector_data["embeddings"]
 
-# --- HELPER FUNCTIONS ---
+from openai import OpenAI
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
 def get_embedding(text: str):
-    response = openai.Embedding.create(
-        input=text,
-        model="text-embedding-3-small"
+    response = client.embeddings.create(
+        model="text-embedding-3-small",
+        input=text
     )
-    return np.array(response["data"][0]["embedding"], dtype=np.float32)
+    return np.array(response.data[0].embedding, dtype=np.float32)
 
 def query_rag(user_input: str) -> Tuple[str, str]:
     embedding = get_embedding(user_input)
