@@ -3,3 +3,4 @@ openai
 faiss-cpu
 numpy
 langchain
+langchain-community
