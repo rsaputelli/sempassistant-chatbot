@@ -18,7 +18,7 @@ ADMIN_USERS = ["ray@lutinemanagement.com"]
 user_email = getattr(st.experimental_user, "email", None)
 
 # --- LOAD VECTOR STORE ---
-with open("/mnt/data/sempa_faiss_index.pkl", "rb") as f:
+with open("sempa_faiss_index.pkl", "rb") as f:
     vector_data = pickle.load(f)
     faiss_index = vector_data["index"]
     documents = vector_data["documents"]
