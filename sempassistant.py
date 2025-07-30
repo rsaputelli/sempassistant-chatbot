@@ -5,8 +5,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Tuple
 import pickle
-
 import numpy as np
+
 from langchain_community.vectorstores import FAISS
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import RetrievalQA
@@ -22,20 +22,15 @@ user_email = getattr(st.experimental_user, "email", None)
 
 # --- LOAD VECTOR STORE ---
 with open("sempa_faiss_index.pkl", "rb") as f:
-    vector_data = pickle.load(f)
-    faiss_index = vector_data["index"]
-    documents = vector_data["documents"]
-    embeddings = vector_data["embeddings"]
+    vectorstore = pickle.load(f)
 
-# Rebuild vectorstore and retriever
-vectorstore = FAISS(embedding_function=None, index=faiss_index, documents=documents)
 retriever = vectorstore.as_retriever()
 
 # --- OPENAI CLIENT ---
 from openai import OpenAI
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# --- EMBEDDING FUNCTION ---
+# --- EMBEDDING FUNCTION (used internally, optional) ---
 def get_embedding(text: str):
     response = client.embeddings.create(
         model="text-embedding-3-small",
@@ -151,6 +146,7 @@ if user_email in ADMIN_USERS:
                 st.download_button("📥 Download Source Log", f, file_name="source_log.csv")
 else:
     st.sidebar.caption("Admin access required to view tools.")
+
 
 
 
