@@ -51,15 +51,36 @@ def get_embedding(text: str):
     )
     return np.array(response.data[0].embedding, dtype=np.float32)
 
-# --- RAG CHAIN ---
+from langchain.prompts import PromptTemplate
+
+# Custom prompt to encourage confident, user-friendly responses
+custom_prompt = PromptTemplate(
+    input_variables=["context", "question"],
+    template="""
+You are a helpful assistant for SEMPA, the Society of Emergency Medicine Physician Assistants.
+Answer the user's question clearly and confidently based on the context provided.
+
+If the context contains the answer, present it in a friendly and conversational way.
+If the answer isn't present, don't mention the context or documents — just say you’re not sure and suggest contacting SEMPA.
+
+Question: {question}
+
+Context:
+{context}
+
+Helpful Answer:
+"""
+)
+
 llm = ChatOpenAI(model="gpt-4", temperature=0)
+
 rag_chain = RetrievalQA.from_chain_type(
     llm=llm,
     retriever=retriever,
     chain_type="stuff",
-    return_source_documents=True
+    return_source_documents=True,
+    chain_type_kwargs={"prompt": custom_prompt}
 )
-
 # --- FAQ MAPPING ---
 def normalize(text):
     return text.lower().strip()
