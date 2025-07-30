@@ -4,9 +4,12 @@ import csv
 from datetime import datetime
 from pathlib import Path
 from typing import Tuple
-import faiss
 import pickle
+
 import numpy as np
+from langchain.vectorstores.faiss import FAISS
+from langchain.chat_models import ChatOpenAI
+from langchain.chains import RetrievalQA
 
 # --- PAGE SETUP ---
 st.set_page_config(page_title="SEMPAssistant", page_icon="🩺", layout="centered")
@@ -18,14 +21,13 @@ ADMIN_USERS = ["ray@lutinemanagement.com"]
 user_email = getattr(st.experimental_user, "email", None)
 
 # --- LOAD VECTOR STORE ---
-from langchain.vectorstores.faiss import FAISS
-
 with open("sempa_faiss_index.pkl", "rb") as f:
     vector_data = pickle.load(f)
     faiss_index = vector_data["index"]
     documents = vector_data["documents"]
     embeddings = vector_data["embeddings"]
 
+# Rebuild vectorstore and retriever
 vectorstore = FAISS(embedding_function=None, index=faiss_index, documents=documents)
 retriever = vectorstore.as_retriever()
 
@@ -33,7 +35,7 @@ retriever = vectorstore.as_retriever()
 from openai import OpenAI
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-
+# --- EMBEDDING FUNCTION ---
 def get_embedding(text: str):
     response = client.embeddings.create(
         model="text-embedding-3-small",
@@ -41,15 +43,16 @@ def get_embedding(text: str):
     )
     return np.array(response.data[0].embedding, dtype=np.float32)
 
-def query_rag(user_input: str) -> Tuple[str, str]:
-    embedding = get_embedding(user_input)
-    D, I = faiss_index.search(np.array([embedding]), k=1)
-    idx = I[0][0]
-    score = D[0][0]
-    if score < 0.75:
-        return documents[idx], "RAG"
-    return None, None
+# --- RAG CHAIN ---
+llm = ChatOpenAI(model="gpt-4", temperature=0)
+rag_chain = RetrievalQA.from_chain_type(
+    llm=llm,
+    retriever=retriever,
+    chain_type="stuff",
+    return_source_documents=True
+)
 
+# --- FAQ MAPPING ---
 def normalize(text):
     return text.lower().strip()
 
@@ -101,9 +104,20 @@ if user_input:
         st.markdown("[Click here to email us directly](mailto:sempa@sempa.org)")
         log_source(user_input, "Email Referral")
     else:
-        answer, source = query_rag(user_input)
+        # First try RAG
+        try:
+            response = rag_chain({"query": user_input})
+            answer = response["result"]
+            source = "RAG"
+        except Exception:
+            answer = None
+            source = None
+
+        # Then fallback to FAQ
         if not answer:
             answer, source = match_faq(user_input)
+
+        # Then fallback to GPT
         if not answer:
             openai.api_key = st.secrets["OPENAI_API_KEY"]
             try:
@@ -120,6 +134,7 @@ if user_input:
             except Exception:
                 answer = "I'm not sure — please contact us at [sempa@sempa.org](mailto:sempa@sempa.org)"
                 source = "Fallback"
+
         log_source(user_input, source)
         st.success(answer)
 
@@ -136,5 +151,6 @@ if user_email in ADMIN_USERS:
                 st.download_button("📥 Download Source Log", f, file_name="source_log.csv")
 else:
     st.sidebar.caption("Admin access required to view tools.")
+
 
 
