@@ -40,6 +40,7 @@ vectorstore = FAISS(
 )
 retriever = vectorstore.as_retriever(search_kwargs={"k": 6})
 st.write("✅ Vectorstore loaded with", len(documents), "documents.")
+
 # --- OPENAI CLIENT ---
 client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
@@ -52,6 +53,8 @@ def get_embedding(text: str):
     return np.array(response.data[0].embedding, dtype=np.float32)
 
 from langchain.prompts import PromptTemplate
+from langchain.chains.combine_documents import StuffDocumentsChain
+from langchain.chains.llm import LLMChain
 
 # Custom prompt to encourage confident, user-friendly responses
 custom_prompt = PromptTemplate(
@@ -73,13 +76,13 @@ Helpful Answer:
 )
 
 llm = ChatOpenAI(model="gpt-4", temperature=0)
+llm_chain = LLMChain(llm=llm, prompt=custom_prompt)
+combine_docs_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="context")
 
-rag_chain = RetrievalQA.from_chain_type(
-    llm=llm,
+rag_chain = RetrievalQA(
     retriever=retriever,
-    chain_type="stuff",
-    return_source_documents=True,
-    
+    combine_documents_chain=combine_docs_chain,
+    return_source_documents=True
 )
 
 # --- FAQ MAPPING ---
@@ -144,8 +147,6 @@ if user_input:
         try:
             response = rag_chain({"query": user_input})
             answer = response["result"]
-            st.write("🔍 DEBUG - Raw rag_chain response:", response)
-            st.write("🔍 DEBUG - Raw result text repr:", repr(answer))
             source_docs = response.get("source_documents", [])
             source = "RAG"
 
@@ -153,9 +154,6 @@ if user_input:
             st.write("🔍 DEBUG - Answer:", answer)
             st.write("🔍 DEBUG - # of source documents:", len(source_docs))
             st.write("🔍 DEBUG - First source doc:", source_docs[0].page_content[:300] if source_docs else "None")
-
-            st.write("🔍 DEBUG - Raw response keys:", list(response.keys()))
-            
 
             source_url = find_best_source(answer, source_docs) if source_docs else None
         except Exception:
@@ -200,12 +198,13 @@ if user_email in ADMIN_USERS:
         st.subheader("📊 Admin Dashboard")
         if Path("token_log.csv").exists():
             with open("token_log.csv", "rb") as f:
-                st.download_button("🗕️ Download Token Log", f, file_name="token_log.csv")
+                st.download_button("🗅️ Download Token Log", f, file_name="token_log.csv")
         if Path("source_log.csv").exists():
             with open("source_log.csv", "rb") as f:
-                st.download_button("🗕️ Download Source Log", f, file_name="source_log.csv")
+                st.download_button("🗅️ Download Source Log", f, file_name="source_log.csv")
 else:
     st.sidebar.caption("Admin access required to view tools.")
+
 
 
 
