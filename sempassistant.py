@@ -15,7 +15,7 @@ from langchain.docstore import InMemoryDocstore
 # --- PAGE SETUP ---
 st.set_page_config(page_title="SEMPAssistant", page_icon="💕", layout="centered")
 st.title("👋 Welcome to SEMPAssistant!")
-st.write("I'm here to help you with your questions about SEMPA. Ask me anything!")
+st.write("I'm here to help you with SEMPA membership and event questions. Ask me anything!")
 
 # --- ADMIN CONFIG ---
 ADMIN_USERS = ["ray@lutinemanagement.com"]
@@ -178,6 +178,9 @@ if user_email in ADMIN_USERS:
                 st.download_button("📅 Download Source Log", f, file_name="source_log.csv")
 else:
     st.sidebar.caption("Admin access required to view tools.")
+
+
+
 
 
 
