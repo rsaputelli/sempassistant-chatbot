@@ -146,6 +146,12 @@ if user_input:
             answer = response["result"]
             source_docs = response.get("source_documents", [])
             source = "RAG"
+
+            # DEBUG
+            st.write("🔍 DEBUG - Answer:", answer)
+            st.write("🔍 DEBUG - # of source documents:", len(source_docs))
+            st.write("🔍 DEBUG - First source doc:", source_docs[0].page_content[:300] if source_docs else "None")
+
             source_url = find_best_source(answer, source_docs) if source_docs else None
         except Exception:
             answer = None
@@ -195,7 +201,6 @@ if user_email in ADMIN_USERS:
                 st.download_button("🗕️ Download Source Log", f, file_name="source_log.csv")
 else:
     st.sidebar.caption("Admin access required to view tools.")
-
 
 
 
