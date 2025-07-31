@@ -13,13 +13,13 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.docstore import InMemoryDocstore
 
 # --- PAGE SETUP ---
-st.set_page_config(page_title="SEMPAssistant", page_icon="💕", layout="centered")
+st.set_page_config(page_title="SEMPAssistant", page_icon="🢕", layout="centered")
 st.title("👋 Welcome to SEMPAssistant!")
 st.write("I'm here to help you with your questions about SEMPA. Ask me anything!")
 
 # --- ADMIN CONFIG ---
 ADMIN_USERS = ["ray@lutinemanagement.com"]
-user_email = getattr(st.experimental_user, "email", None)
+user_email = getattr(st.user, "email", None)
 
 # --- LOAD VECTOR STORE ---
 with open("sempa_faiss_index.pkl", "rb") as f:
