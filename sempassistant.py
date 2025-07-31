@@ -143,6 +143,7 @@ if user_input:
     else:
         try:
             response = rag_chain({"query": user_input})
+            st.write("🔍 DEBUG - Raw rag_chain response:", response)
             answer = response["result"]
             source_docs = response.get("source_documents", [])
             source = "RAG"
