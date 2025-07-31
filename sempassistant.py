@@ -71,6 +71,7 @@ Documents:
 Helpful Answer:
 """)
 
+llm = ChatOpenAI(model="gpt-4", temperature=0)
 from langchain.chains.question_answering import load_qa_chain
 
 qa_chain = load_qa_chain(llm=llm, chain_type="stuff", prompt=custom_prompt)
