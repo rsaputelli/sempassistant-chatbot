@@ -13,7 +13,7 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.docstore import InMemoryDocstore
 
 # --- PAGE SETUP ---
-st.set_page_config(page_title="SEMPAssistant", page_icon="🢕", layout="centered")
+st.set_page_config(page_title="SEMPAssistant", page_icon="🔕", layout="centered")
 st.title("👋 Welcome to SEMPAssistant!")
 st.write("I'm here to help you with your questions about SEMPA. Ask me anything!")
 
@@ -144,17 +144,9 @@ if user_input:
         try:
             response = rag_chain({"query": user_input})
             answer = response["result"]
+            source_docs = response.get("source_documents", [])
             source = "RAG"
-
-            st.write("🔍 DEBUG - Answer:", answer)
-            st.write("🔍 DEBUG - # of source documents:", len(source_docs))
-            st.write("🔍 DEBUG - First source doc:", source_docs[0].page_content[:300] if source_docs else "None")
-            
-            # Improved source attribution using lightweight match
-            source_url = None
-            if "source_documents" in response and response["source_documents"]:
-                source_url = find_best_source(answer, response["source_documents"])
-
+            source_url = find_best_source(answer, source_docs) if source_docs else None
         except Exception:
             answer = None
             source = None
@@ -197,10 +189,10 @@ if user_email in ADMIN_USERS:
         st.subheader("📊 Admin Dashboard")
         if Path("token_log.csv").exists():
             with open("token_log.csv", "rb") as f:
-                st.download_button("📅 Download Token Log", f, file_name="token_log.csv")
+                st.download_button("🗕️ Download Token Log", f, file_name="token_log.csv")
         if Path("source_log.csv").exists():
             with open("source_log.csv", "rb") as f:
-                st.download_button("📅 Download Source Log", f, file_name="source_log.csv")
+                st.download_button("🗕️ Download Source Log", f, file_name="source_log.csv")
 else:
     st.sidebar.caption("Admin access required to view tools.")
 
