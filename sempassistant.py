@@ -146,6 +146,10 @@ if user_input:
             answer = response["result"]
             source = "RAG"
 
+            st.write("🔍 DEBUG - Answer:", answer)
+            st.write("🔍 DEBUG - # of source documents:", len(source_docs))
+            st.write("🔍 DEBUG - First source doc:", source_docs[0].page_content[:300] if source_docs else "None")
+            
             # Improved source attribution using lightweight match
             source_url = None
             if "source_documents" in response and response["source_documents"]:
