@@ -146,7 +146,6 @@ def find_best_source(answer, source_docs, query=None):
 import re
 
 def cleanup_text(text):
-    # Collapse embedded character-per-line blocks into words
     lines = text.splitlines()
     fixed_lines = []
     buffer = []
@@ -157,25 +156,27 @@ def cleanup_text(text):
             buffer.append(stripped)
         else:
             if len(buffer) > 3:
-                fixed_lines.append(''.join(buffer))  # Merge buffer
+                fixed_lines.append(''.join(buffer))  # Merge characters into word
             elif buffer:
-                fixed_lines.extend(buffer)  # Not likely a broken word
+                fixed_lines.extend(buffer)  # Just append normally
             buffer = []
             fixed_lines.append(line)
 
+    # Catch any leftover buffer
     if buffer:
         if len(buffer) > 3:
             fixed_lines.append(''.join(buffer))
         else:
             fixed_lines.extend(buffer)
 
+    # Rejoin the cleaned lines
     text = '\n'.join(fixed_lines)
 
-    # Remove excessive newlines and spaces
+    # Final pass: strip extra spacing and clean line breaks
     text = re.sub(r'\n+', '\n', text)
     text = re.sub(r'\s{2,}', ' ', text)
-    return text.strip()
 
+    return text.strip()
 # --- MAIN CHAT LOGIC ---
 user_input = st.text_input("Ask a question about SEMPA membership or events:")
 if user_input:
