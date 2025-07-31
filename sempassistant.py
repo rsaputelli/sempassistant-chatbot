@@ -143,6 +143,21 @@ def find_best_source(answer, source_docs, query=None):
     # Fallback
     return source_docs[0].metadata.get("source") if source_docs else None
 
+import re
+def cleanup_text(text):
+    # Fix character-per-line artifacts like: f\no\nr\n1\ny...
+    lines = text.splitlines()
+    if all(len(line.strip()) == 1 for line in lines[:15]):
+        return ''.join(lines)
+    
+    # Fix cases like 'f o r 1 y e a r'
+    text = re.sub(r'(\b\w) (\w\b)', r'\1\2', text)
+    
+    # Remove excessive newlines and spaces
+    text = re.sub(r'\n+', '\n', text)
+    text = re.sub(r'\s{2,}', ' ', text)
+    return text.strip()
+
 # --- MAIN CHAT LOGIC ---
 user_input = st.text_input("Ask a question about SEMPA membership or events:")
 if user_input:
@@ -151,14 +166,14 @@ if user_input:
         st.markdown("[Click here to email us directly](mailto:sempa@sempa.org)")
         log_source(user_input, "Email Referral")
     else:
-        try:
-            with st.spinner("Thinking..."):
-                response = rag_chain({"query": user_input})
-            answer = response["result"]
-            source_docs = response.get("source_documents", [])
-            source = "RAG"
-
-            source_url = find_best_source(answer, source_docs, query=user_input) if source_docs else None
+    try:
+        with st.spinner("Thinking..."):
+            response = rag_chain({"query": user_input})
+        answer = response["result"]
+        answer = cleanup_text(answer)  # <-- THIS LINE HERE
+        source_docs = response.get("source_documents", [])
+        source = "RAG"
+        source_url = find_best_source(answer, source_docs, query=user_input) if source_docs else None
         except Exception:
             answer = None
             source = None
