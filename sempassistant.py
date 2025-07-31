@@ -153,7 +153,8 @@ if user_input:
             st.write("🔍 DEBUG - First source doc:", source_docs[0].page_content[:300] if source_docs else "None")
 
             source_url = find_best_source(answer, source_docs) if source_docs else None
-        except Exception:
+        except Exception as e:
+            st.error(f"❌ RAG Chain Error: {e}")
             answer = None
             source = None
             source_url = None
