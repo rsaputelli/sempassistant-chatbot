@@ -40,7 +40,6 @@ vectorstore = FAISS(
     embedding_function=embedding_function
 )
 retriever = vectorstore.as_retriever(search_kwargs={"k": 6})
-st.write("✅ Vectorstore loaded with", len(documents), "documents.")
 
 # --- OPENAI CLIENT ---
 client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -142,19 +141,14 @@ if user_input:
         log_source(user_input, "Email Referral")
     else:
         try:
-            response = rag_chain({"query": user_input})
+            with st.spinner("Thinking..."):
+                response = rag_chain({"query": user_input})
             answer = response["result"]
             source_docs = response.get("source_documents", [])
             source = "RAG"
 
-            st.write("🔍 DEBUG - RAG raw response:", response)
-            st.write("🔍 DEBUG - Answer:", answer)
-            st.write("🔍 DEBUG - # of source documents:", len(source_docs))
-            st.write("🔍 DEBUG - First source doc:", source_docs[0].page_content[:300] if source_docs else "None")
-
             source_url = find_best_source(answer, source_docs) if source_docs else None
-        except Exception as e:
-            st.error(f"❌ RAG Chain Error: {e}")
+        except Exception:
             answer = None
             source = None
             source_url = None
