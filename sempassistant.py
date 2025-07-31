@@ -136,6 +136,7 @@ if user_input:
     else:
         try:
             response = rag_chain({"query": user_input})
+            st.write(response)
             answer = response.get("result", None)
             source = "RAG"
             source_url = None
