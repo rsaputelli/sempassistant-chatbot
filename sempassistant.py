@@ -143,8 +143,9 @@ if user_input:
     else:
         try:
             response = rag_chain({"query": user_input})
-            st.write("🔍 DEBUG - Raw rag_chain response:", response)
             answer = response["result"]
+            st.write("🔍 DEBUG - Raw rag_chain response:", response)
+            st.write("🔍 DEBUG - Raw result text repr:", repr(answer))
             source_docs = response.get("source_documents", [])
             source = "RAG"
 
@@ -154,7 +155,7 @@ if user_input:
             st.write("🔍 DEBUG - First source doc:", source_docs[0].page_content[:300] if source_docs else "None")
 
             st.write("🔍 DEBUG - Raw response keys:", list(response.keys()))
-            st.write("🔍 DEBUG - Raw result text repr:", repr(answer))
+            
 
             source_url = find_best_source(answer, source_docs) if source_docs else None
         except Exception:
