@@ -55,18 +55,18 @@ def get_embedding(text: str):
 
 # --- CUSTOM PROMPT ---
 custom_prompt = PromptTemplate(
-    input_variables=["context", "question"],
+    input_variables=["input_documents", "question"],
     template="""
 You are a helpful assistant for SEMPA, the Society of Emergency Medicine Physician Assistants.
-Answer the user's question clearly and confidently based on the context provided.
+Answer the user's question clearly and confidently based on the documents provided.
 
-If the context contains the answer, present it in a friendly and conversational way.
-If the answer isn't present, don't mention the context or documents — just say you’re not sure and suggest contacting SEMPA.
+If the documents contain the answer, present it in a friendly and conversational way.
+If the answer isn't present, don’t mention the documents — just say you’re not sure and suggest contacting SEMPA.
 
 Question: {question}
 
-Context:
-{context}
+Documents:
+{input_documents}
 
 Helpful Answer:
 """
