@@ -53,7 +53,7 @@ def get_embedding(text: str):
     return np.array(response.data[0].embedding, dtype=np.float32)
 
 from langchain.prompts import PromptTemplate
-from langchain.chains.combine_documents import StuffDocumentsChain
+from langchain.chains.combine_documents.base import StuffDocumentsChain
 from langchain.chains.llm import LLMChain
 
 # Custom prompt to encourage confident, user-friendly responses
