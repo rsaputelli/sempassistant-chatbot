@@ -144,15 +144,33 @@ def find_best_source(answer, source_docs, query=None):
     return source_docs[0].metadata.get("source") if source_docs else None
 
 import re
+
 def cleanup_text(text):
-    # Fix character-per-line artifacts like: f\no\nr\n1\ny...
+    # Collapse embedded character-per-line blocks into words
     lines = text.splitlines()
-    if all(len(line.strip()) == 1 for line in lines[:15]):
-        return ''.join(lines)
-    
-    # Fix cases like 'f o r 1 y e a r'
-    text = re.sub(r'(\b\w) (\w\b)', r'\1\2', text)
-    
+    fixed_lines = []
+    buffer = []
+
+    for line in lines:
+        stripped = line.strip()
+        if len(stripped) == 1 and stripped.isalpha():
+            buffer.append(stripped)
+        else:
+            if len(buffer) > 3:
+                fixed_lines.append(''.join(buffer))  # Merge buffer
+            elif buffer:
+                fixed_lines.extend(buffer)  # Not likely a broken word
+            buffer = []
+            fixed_lines.append(line)
+
+    if buffer:
+        if len(buffer) > 3:
+            fixed_lines.append(''.join(buffer))
+        else:
+            fixed_lines.extend(buffer)
+
+    text = '\n'.join(fixed_lines)
+
     # Remove excessive newlines and spaces
     text = re.sub(r'\n+', '\n', text)
     text = re.sub(r'\s{2,}', ' ', text)
