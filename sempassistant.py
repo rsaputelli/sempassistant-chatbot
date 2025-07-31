@@ -54,9 +54,9 @@ def get_embedding(text: str):
     return np.array(response.data[0].embedding, dtype=np.float32)
 
 # --- CUSTOM PROMPT ---
-custom_prompt = PromptTemplate(
-    input_variables=["input_documents", "question"],
-    template="""
+from langchain.prompts import PromptTemplate
+
+custom_prompt = PromptTemplate.from_template("""
 You are a helpful assistant for SEMPA, the Society of Emergency Medicine Physician Assistants.
 Answer the user's question clearly and confidently based on the documents provided.
 
@@ -66,19 +66,19 @@ If the answer isn't present, don't mention the documents — just say you’re n
 Question: {question}
 
 Documents:
-{input_documents}
+{context}
 
 Helpful Answer:
-"""
-)
+""")
 
-llm = ChatOpenAI(model="gpt-4", temperature=0)
-rag_chain = RetrievalQA.from_chain_type(
-    llm=llm,
+from langchain.chains.question_answering import load_qa_chain
+
+qa_chain = load_qa_chain(llm=llm, chain_type="stuff", prompt=custom_prompt)
+
+rag_chain = RetrievalQA(
     retriever=retriever,
-    chain_type="stuff",
-    return_source_documents=True,
-    
+    combine_documents_chain=qa_chain,
+    return_source_documents=True
 )
 
 # --- FAQ MAPPING ---
