@@ -147,6 +147,7 @@ if user_input:
             source_docs = response.get("source_documents", [])
             source = "RAG"
 
+            st.write("🔍 DEBUG - RAG raw response:", response)
             st.write("🔍 DEBUG - Answer:", answer)
             st.write("🔍 DEBUG - # of source documents:", len(source_docs))
             st.write("🔍 DEBUG - First source doc:", source_docs[0].page_content[:300] if source_docs else "None")
