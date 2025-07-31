@@ -79,7 +79,7 @@ rag_chain = RetrievalQA.from_chain_type(
     retriever=retriever,
     chain_type="stuff",
     return_source_documents=True,
-    chain_type_kwargs={"prompt": custom_prompt}
+    
 )
 
 # --- FAQ MAPPING ---
