@@ -136,14 +136,14 @@ if user_input:
     else:
         try:
             response = rag_chain({"query": user_input})
-            answer = response["result"]
+            answer = response.get("result", None)
             source = "RAG"
-        
-            # Try to extract a source URL from the first matching document
             source_url = None
-            if "source_documents" in response and response["source_documents"]:
-                first_doc = response["source_documents"][0]
-                source_url = first_doc.metadata.get("source", None)
+        
+            if answer:
+                docs = response.get("source_documents", [])
+                if docs:
+                    source_url = docs[0].metadata.get("source", None)
         
         except Exception:
             answer = None
