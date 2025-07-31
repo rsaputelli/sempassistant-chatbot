@@ -166,14 +166,14 @@ if user_input:
         st.markdown("[Click here to email us directly](mailto:sempa@sempa.org)")
         log_source(user_input, "Email Referral")
     else:
-    try:
-        with st.spinner("Thinking..."):
-            response = rag_chain({"query": user_input})
-        answer = response["result"]
-        answer = cleanup_text(answer)  # <-- THIS LINE HERE
-        source_docs = response.get("source_documents", [])
-        source = "RAG"
-        source_url = find_best_source(answer, source_docs, query=user_input) if source_docs else None
+        try:
+            with st.spinner("Thinking..."):
+                response = rag_chain({"query": user_input})
+            answer = response["result"]
+            answer = cleanup_text(answer)  # <-- THIS LINE HERE
+            source_docs = response.get("source_documents", [])
+            source = "RAG"
+            source_url = find_best_source(answer, source_docs, query=user_input) if source_docs else None
         except Exception:
             answer = None
             source = None
