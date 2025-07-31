@@ -53,8 +53,6 @@ def get_embedding(text: str):
     return np.array(response.data[0].embedding, dtype=np.float32)
 
 # --- CUSTOM PROMPT ---
-from langchain.prompts import PromptTemplate
-
 custom_prompt = PromptTemplate.from_template("""
 You are a helpful assistant for SEMPA, the Society of Emergency Medicine Physician Assistants.
 Answer the user's question clearly and confidently based on the documents provided.
@@ -127,20 +125,17 @@ def log_source(question, source):
 
 def find_best_source(answer, source_docs, query=None):
     query_keywords = query.lower().split() if query else []
-    
-    # Try matching the answer directly
+
     answer_snippet = answer.lower()[:100]
     for doc in source_docs:
         if answer_snippet in doc.page_content.lower():
             return doc.metadata.get("source")
 
-    # Try keyword match with query
     for doc in source_docs:
         content = doc.page_content.lower()
         if any(keyword in content for keyword in query_keywords):
             return doc.metadata.get("source")
 
-    # Fallback
     return source_docs[0].metadata.get("source") if source_docs else None
 
 import re
@@ -156,27 +151,24 @@ def cleanup_text(text):
             buffer.append(stripped)
         else:
             if len(buffer) > 3:
-                fixed_lines.append(''.join(buffer))  # Merge characters into word
+                fixed_lines.append(''.join(buffer))
             elif buffer:
-                fixed_lines.extend(buffer)  # Just append normally
+                fixed_lines.extend(buffer)
             buffer = []
             fixed_lines.append(line)
 
-    # Catch any leftover buffer
     if buffer:
         if len(buffer) > 3:
             fixed_lines.append(''.join(buffer))
         else:
             fixed_lines.extend(buffer)
 
-    # Rejoin the cleaned lines
     text = '\n'.join(fixed_lines)
-
-    # Final pass: strip extra spacing and clean line breaks
     text = re.sub(r'\n+', '\n', text)
     text = re.sub(r'\s{2,}', ' ', text)
 
     return text.strip()
+
 # --- MAIN CHAT LOGIC ---
 user_input = st.text_input("Ask a question about SEMPA membership or events:")
 if user_input:
@@ -189,7 +181,7 @@ if user_input:
             with st.spinner("Thinking..."):
                 response = rag_chain({"query": user_input})
             answer = response["result"]
-            answer = cleanup_text(answer)  # <-- THIS LINE HERE
+            answer = cleanup_text(answer)
             source_docs = response.get("source_documents", [])
             source = "RAG"
             source_url = find_best_source(answer, source_docs, query=user_input) if source_docs else None
