@@ -81,6 +81,7 @@ rag_chain = RetrievalQA.from_chain_type(
     return_source_documents=True,
     chain_type_kwargs={"prompt": custom_prompt}
 )
+
 # --- FAQ MAPPING ---
 def normalize(text):
     return text.lower().strip()
@@ -92,7 +93,6 @@ FAQS = {
     "member discounts": "Yes! Members save up to 40% on events, CME, and partner resources.",
     "access session recordings": "Log in to your SEMPA account and go to the 'My Education' section to find session recordings.",
     "contact sempa": "You can reach SEMPA at sempa@sempa.org or call 877-297-7954."
-    
 }
 
 SYNONYM_MAP = {
@@ -126,6 +126,13 @@ def log_source(question, source):
         writer = csv.writer(f)
         writer.writerow([datetime.now(), question, source])
 
+def find_best_source(answer, source_docs):
+    answer_lower = answer.lower()[:100]
+    for doc in source_docs:
+        if answer_lower in doc.page_content.lower():
+            return doc.metadata.get("source")
+    return source_docs[0].metadata.get("source") if source_docs else None
+
 # --- MAIN CHAT LOGIC ---
 user_input = st.text_input("Ask a question about SEMPA membership or events:")
 if user_input:
@@ -138,22 +145,21 @@ if user_input:
             response = rag_chain({"query": user_input})
             answer = response["result"]
             source = "RAG"
-        
-            # Try to extract a source URL from the first matching document
+
+            # Improved source attribution using lightweight match
             source_url = None
             if "source_documents" in response and response["source_documents"]:
-                first_doc = response["source_documents"][0]
-                source_url = first_doc.metadata.get("source", None)
-        
+                source_url = find_best_source(answer, response["source_documents"])
+
         except Exception:
             answer = None
             source = None
             source_url = None
-        
+
         if not answer:
             answer, source = match_faq(user_input)
             source_url = None
-        
+
         if not answer:
             openai.api_key = st.secrets["OPENAI_API_KEY"]
             try:
@@ -172,14 +178,13 @@ if user_input:
                 answer = "I'm not sure — please contact us at [sempa@sempa.org](mailto:sempa@sempa.org)"
                 source = "Fallback"
                 source_url = None
-        
+
         log_source(user_input, source)
-        
+
         if answer:
             st.success(answer)
             if source == "RAG" and source_url:
                 st.markdown(f"\n\n_Source: [View source]({source_url})_")
-        
 
 # --- ADMIN DASHBOARD ---
 st.sidebar.markdown("🔐 Admin Panel")
@@ -194,7 +199,6 @@ if user_email in ADMIN_USERS:
                 st.download_button("📅 Download Source Log", f, file_name="source_log.csv")
 else:
     st.sidebar.caption("Admin access required to view tools.")
-
 
 
 
