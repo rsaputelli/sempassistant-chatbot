@@ -152,6 +152,9 @@ if user_input:
             st.write("🔍 DEBUG - # of source documents:", len(source_docs))
             st.write("🔍 DEBUG - First source doc:", source_docs[0].page_content[:300] if source_docs else "None")
 
+            st.write("🔍 DEBUG - Raw response keys:", list(response.keys()))
+            st.write("🔍 DEBUG - Raw result text repr:", repr(answer))
+
             source_url = find_best_source(answer, source_docs) if source_docs else None
         except Exception:
             answer = None
