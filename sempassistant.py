@@ -136,25 +136,15 @@ if user_input:
     else:
         try:
             response = rag_chain({"query": user_input})
-            st.write(response)
-            answer = response.get("result", None)
+            answer = response["result"]
             source = "RAG"
-            source_url = None
-        
-            if answer:
-                docs = response.get("source_documents", [])
-                if docs:
-                    source_url = docs[0].metadata.get("source", None)
-        
         except Exception:
             answer = None
             source = None
-            source_url = None
-        
+
         if not answer:
             answer, source = match_faq(user_input)
-            source_url = None
-        
+
         if not answer:
             openai.api_key = st.secrets["OPENAI_API_KEY"]
             try:
@@ -168,19 +158,12 @@ if user_input:
                 answer = response['choices'][0]['message']['content']
                 log_token_usage(user_input, response['usage']['total_tokens'])
                 source = "GPT"
-                source_url = None
             except Exception:
                 answer = "I'm not sure — please contact us at [sempa@sempa.org](mailto:sempa@sempa.org)"
                 source = "Fallback"
-                source_url = None
-        
+
         log_source(user_input, source)
-        
-        if answer:
-            st.success(answer)
-            if source == "RAG" and source_url:
-                st.markdown(f"\n\n_Source: [View source]({source_url})_")
-        
+        st.success(answer)
 
 # --- ADMIN DASHBOARD ---
 st.sidebar.markdown("🔐 Admin Panel")
@@ -195,6 +178,9 @@ if user_email in ADMIN_USERS:
                 st.download_button("📅 Download Source Log", f, file_name="source_log.csv")
 else:
     st.sidebar.caption("Admin access required to view tools.")
+
+
+
 
 
 
