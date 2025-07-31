@@ -125,11 +125,22 @@ def log_source(question, source):
         writer = csv.writer(f)
         writer.writerow([datetime.now(), question, source])
 
-def find_best_source(answer, source_docs):
-    answer_lower = answer.lower()[:100]
+def find_best_source(answer, source_docs, query=None):
+    query_keywords = query.lower().split() if query else []
+    
+    # Try matching the answer directly
+    answer_snippet = answer.lower()[:100]
     for doc in source_docs:
-        if answer_lower in doc.page_content.lower():
+        if answer_snippet in doc.page_content.lower():
             return doc.metadata.get("source")
+
+    # Try keyword match with query
+    for doc in source_docs:
+        content = doc.page_content.lower()
+        if any(keyword in content for keyword in query_keywords):
+            return doc.metadata.get("source")
+
+    # Fallback
     return source_docs[0].metadata.get("source") if source_docs else None
 
 # --- MAIN CHAT LOGIC ---
@@ -147,7 +158,7 @@ if user_input:
             source_docs = response.get("source_documents", [])
             source = "RAG"
 
-            source_url = find_best_source(answer, source_docs) if source_docs else None
+            source_url = find_best_source(answer, source_docs, query=user_input) if source_docs else None
         except Exception:
             answer = None
             source = None
