@@ -53,8 +53,7 @@ def get_embedding(text: str):
     return np.array(response.data[0].embedding, dtype=np.float32)
 
 from langchain.prompts import PromptTemplate
-from langchain.chains.combine_documents.base import StuffDocumentsChain
-from langchain.chains.llm import LLMChain
+from langchain.chains import load_qa_chain
 
 # Custom prompt to encourage confident, user-friendly responses
 custom_prompt = PromptTemplate(
@@ -76,12 +75,10 @@ Helpful Answer:
 )
 
 llm = ChatOpenAI(model="gpt-4", temperature=0)
-llm_chain = LLMChain(llm=llm, prompt=custom_prompt)
-combine_docs_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="context")
-
+qa_chain = load_qa_chain(llm=llm, chain_type="stuff", prompt=custom_prompt)
 rag_chain = RetrievalQA(
     retriever=retriever,
-    combine_documents_chain=combine_docs_chain,
+    combine_documents_chain=qa_chain,
     return_source_documents=True
 )
 
