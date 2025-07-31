@@ -15,7 +15,7 @@ from langchain.docstore import InMemoryDocstore
 # --- PAGE SETUP ---
 st.set_page_config(page_title="SEMPAssistant", page_icon="💕", layout="centered")
 st.title("👋 Welcome to SEMPAssistant!")
-st.write("I'm here to help you with SEMPA membership and event questions. Ask me anything!")
+st.write("I'm here to help you with your questions about SEMPA. Ask me anything!")
 
 # --- ADMIN CONFIG ---
 ADMIN_USERS = ["ray@lutinemanagement.com"]
@@ -136,15 +136,25 @@ if user_input:
     else:
         try:
             response = rag_chain({"query": user_input})
-            answer = response["result"]
+            st.write(response)
+            answer = response.get("result", None)
             source = "RAG"
+            source_url = None
+        
+            if answer:
+                docs = response.get("source_documents", [])
+                if docs:
+                    source_url = docs[0].metadata.get("source", None)
+        
         except Exception:
             answer = None
             source = None
-
+            source_url = None
+        
         if not answer:
             answer, source = match_faq(user_input)
-
+            source_url = None
+        
         if not answer:
             openai.api_key = st.secrets["OPENAI_API_KEY"]
             try:
@@ -158,12 +168,19 @@ if user_input:
                 answer = response['choices'][0]['message']['content']
                 log_token_usage(user_input, response['usage']['total_tokens'])
                 source = "GPT"
+                source_url = None
             except Exception:
                 answer = "I'm not sure — please contact us at [sempa@sempa.org](mailto:sempa@sempa.org)"
                 source = "Fallback"
-
+                source_url = None
+        
         log_source(user_input, source)
-        st.success(answer)
+        
+        if answer:
+            st.success(answer)
+            if source == "RAG" and source_url:
+                st.markdown(f"\n\n_Source: [View source]({source_url})_")
+        
 
 # --- ADMIN DASHBOARD ---
 st.sidebar.markdown("🔐 Admin Panel")
